@@ -1,0 +1,23 @@
+.page-main {
+    @include breakpoint {
+        background-image: $background-pattern-primary;
+        padding: 3em 0;
+    }
+}
+
+.page-content-wrapper {
+    background-color: $theme-color-white;
+    padding: 2em;
+    text-align: center;
+    h1 {
+        color: $theme-color-primary;
+    }
+    .page-summary {
+        opacity: .8;
+        margin-bottom: 3em;
+    }
+    @include breakpoint {
+        @include container($max-width);
+    }
+}
+
