@@ -9,13 +9,15 @@ export default class {
                 view: 'index',
                 metaTitle: 'Webpack Example',
                 title: 'Webpack Example',
-                remoteScripts: ['/script.js']
+                remoteStyles: ['/main.css'],
+                remoteScripts: ['/main.js']
             },
             '/success': {
                 view: 'empty',
                 metaTitle: 'Success',
                 title: 'Success',
-                remoteScripts: ['/script.js']
+                remoteStyles: ['/main.css'],
+                remoteScripts: ['/main.js']
             }
         };
     }

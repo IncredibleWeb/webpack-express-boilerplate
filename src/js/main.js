@@ -1,3 +1,4 @@
+import '../scss/inline.scss';
 import status from './test';
 
 (() => {
