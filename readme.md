@@ -13,7 +13,9 @@ The scope of this project is a boilerplate webpack configuration on an isomorphi
 ## Usage
 - Run `npm install` to install all the required dependencies
 - Run `npm install -g webpack` to install webpack globally on your machine.
-- Run `npm start` to build the project and start a node server on `localhost:3000`
+- Run `npm build` to build the project using webpack configurations.
+- Run `npm start` to start a node server on `localhost:3000`
+- or run `npm startdev` to webpack watch and run nodemon.
 
 ## Server-side
 
