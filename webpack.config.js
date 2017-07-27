@@ -1,74 +1,133 @@
-/*
-* References Used:
-* https://stackoverflow.com/questions/37788142/webpack-for-back-end
-*/
+/* constants */
+const isDev = process.env.NODE_ENV !== "production";
+const port = 3000;
+const isHttps = false;
+const outputFolder = 'dist';
 
-var path = require('path');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
+/* imports */
+const path = require('path');
+const webpack = require('webpack');
+const NodeExternals = require('webpack-node-externals');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ImageminPlugin = require('imagemin-webpack-plugin').default;
+const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const StyleLintPlugin = require('stylelint-webpack-plugin');
 
-const common = {
-    module: {
-        loaders: [ /* common loaders */ ]
-    },
-    plugins: [ /* common plugins */ ],
-    resolve: {
-        extensions: ['.scss', '.js'],
-    }
-    // other plugins, postcss config etc. common for frontend and backend
-};
-
-// const frontend = {
-//      entry: [
-//          'frontend.js'
-//      ],
-//      output: {
-//         filename: 'frontend-output.js'
-//      }
-//      // other loaders, plugins etc. specific for frontend
-// };
-
-const extractSass = new ExtractTextPlugin({
-    filename: 'dist/[name].bundle.css',
-    allChunks: true,
-});
-
-const backend = {
+module.exports = [{
+    name: "node",
+    devtool: isDev ? "inline-sourcemap" : "hidden-source-map",
     target: 'node',
+    node: {
+        __dirname: true
+    },
+    externals: [NodeExternals()],
     entry: [
-        './app.babel.js',
-        './src/scss/style.scss',
-        './src/scss/inline.scss'
+        './app.babel.js'
     ],
     output: {
+        path: __dirname,
         filename: 'app.js'
     },
-    module: {
-        loaders: [
-            {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                loader: 'babel-loader'
-            },
-            {
-                test: /\.scss$/,
-                use: extractSass.extract({
-                    use: [{
-                        loader: 'css-loader'
-                    }, {
-                        loader: 'sass-loader'
-                    }],
-                    // use style-loader in development
-                    fallback: 'style-loader'
-                }),
+    plugins: [
+        new webpack.DefinePlugin({
+            'process.env': {
+                'isDev': JSON.stringify(isDev),
+                'NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+                'port': JSON.stringify(port),
+                'outputFolder': JSON.stringify(outputFolder)
             }
-        ]
+        }),
+        new webpack.optimize.ModuleConcatenationPlugin({
+            disable: isDev
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            disable: isDev,
+            mangle: false,
+            sourceMap: false
+        }),
+    ],
+    module: {
+        loaders: [{
+            enforce: "pre",
+            test: /\.js$/,
+            loader: 'eslint-loader',
+            exclude: /node_modules/,
+            options: {
+                emitError: true,
+                failOnError: true
+            }
+        }, {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            loader: 'babel-loader'
+        }]
+    }
+}, {
+    name: "web",
+    devtool: isDev ? "source-map" : "hidden-source-map",
+    externals: [NodeExternals()],
+    entry: {
+        'script.js': './src/js/main.js',
+        'inline.css': './src/scss/inline.scss',
+        'style.css': './src/scss/style.scss'
+    },
+    output: {
+        path: path.join(__dirname, outputFolder),
+        filename: '[name]'
     },
     plugins: [
-        extractSass
-    ]
-};
-
-module.exports = [
-    // Object.assign({} , common, frontend),
-    Object.assign({} , common, backend)
-];
+        new ExtractTextPlugin({
+            filename: `[name]`,
+            allChunks: true,
+        }),
+        new CopyWebpackPlugin([{
+            from: './src/img/',
+            to: 'img/'
+        }]),
+        new ImageminPlugin({
+            test: /\.(jpe?g|png|gif|svg)$/i,
+            pngquant: {
+                quality: '95-100'
+            }
+        }),
+        new webpack.optimize.ModuleConcatenationPlugin({
+            disable: isDev
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            disable: isDev,
+            mangle: false,
+            sourceMap: false
+        }),
+        new SWPrecacheWebpackPlugin({
+            disable: isDev,
+            cacheId: 'project-name',
+            filename: 'sw.js',
+            minify: true,
+            staticFileGlobs: [
+                `/${outputFolder}/**/*.{css,js}`,
+                `/${outputFolder}/img/**`
+            ],
+            stripPrefix: `/${outputFolder}`
+        }),
+        new StyleLintPlugin()
+    ],
+    module: {
+        loaders: [{
+            enforce: "pre",
+            test: /\.js$/,
+            loader: 'eslint-loader',
+            exclude: /node_modules/,
+            options: {
+                emitError: true
+            }
+        }, {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            loader: 'babel-loader'
+        }, {
+            test: /\.(sass|scss)$/,
+            loader: ExtractTextPlugin.extract(['css-loader', 'postcss-loader', 'sass-loader'])
+        }]
+    }
+}];

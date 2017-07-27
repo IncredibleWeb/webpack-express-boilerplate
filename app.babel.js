@@ -1,29 +1,19 @@
 'use strict';
 
+import http from 'http';
 import path from 'path';
 import express from 'express';
 import exphbs from 'express-handlebars';
-import compression from 'compression';
-
 import PathConfig from './server/models/path-config';
-
-// environment constants
-const PROD = 'prod';
-const DEBUG = 'debug';
-
-// configuration
-let config = {
-    environment: process.argv[2] || PROD,
-    isHttps: process.env.isHttps === 'true' || false
-};
-
-config.folder = config.environment === DEBUG ? '/src' : '/dist';
+import bodyParser from 'body-parser';
+import compression from 'compression';
 
 let app = express();
 app.use(compression());
 
-let viewsDir = './server-dist/views';
-let pathConfig = new PathConfig(`/../..${config.folder}`);
+let viewsDir = './templates';
+
+let pathConfig = new PathConfig(`/../../${process.env.outputFolder}`);
 
 // setup express to use handlebars as the templating engine
 let hbs = exphbs.create({
@@ -35,55 +25,54 @@ app.set('views', path.join(__dirname, `${viewsDir}`));
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
-// // use live reload if debug environment
-// if (config.environment === DEBUG) {
-//     app.use(require('connect-livereload')());
-// }
 // setup server for static assets
-app.use('/', express.static(path.join(__dirname, config.folder), { maxAge: 604800000 }));
+app.use('/', express.static(`${process.env.outputFolder}`, { maxAge: 604800000 }));
 
-// // require HTTPS
-// app.use(requireHttps);
-//
-// // redirect to include www
-// app.use(requireWww);
+// Setup body parser for parsing POST request bodies
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// // Setup body parser for parsing POST request bodies
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
+let port = process.env.port || 3000;
 
-// Setup general GET rule to display pages
-app.get('/', (req, res) => {
-    // retrieve the path data
-    pathConfig.getConfigFromAPI('/', req.query).then((data) => {
-        // if no data was returned, return a 404
-        if (!data) {
-            res.status(404);
-            return;
-        }
-
-        // Build an object with all the data gathered
-        let page = {
-            data: data,
-            view: data.view,
-            path: req.path,
-            params: req.query
-        };
-
-        // Render the page
-        res.render(page.view, page);
-    }).catch((error) => {
-        console.error('No data available for page: ' + '/' + ' Error: ' + error.stack);
-        res.render('500', { layout: false });
-        return;
-    });
+// POST route for form submission
+app.post('/', (req, res) => {
+    // validate the model
+    if (req.body.email !== '') {
+        res.redirect('/success');
+    }
+    res.redirect('/');
 });
 
-// use the environment's port or a random port
-// let port = process.env.port || Math.floor(Math.random() * (65535)) + 1024;
-let port = process.env.port || 3000;
-app.listen(port, () => {
-    console.log(`Running ${config.environment} on localhost:${port}`);
+// setup server urls
+app.get('/*', function(req, res) {
+    // extract the path from the url
+    let urlSections = req.path.split('/');
+    urlSections = urlSections.filter((sectionString) => {
+        return sectionString.length > 0;
+    });
+
+    let urlPath = null;
+    if (urlSections.length === 0) {
+        if (urlSections[0] === '') {}
+        urlPath = '/';
+    } else {
+        urlPath = '/' + urlSections.join('/');
+    }
+
+    // retrieve the path data
+    let pathConfigData = pathConfig.getConfig(urlPath);
+    if (!pathConfigData) {
+        res.status(404).send();
+        return;
+    }
+
+    // render the response
+    res.render(pathConfigData.data.view, pathConfigData);
+});
+
+// only create two servers if running on localhost
+http.createServer(app).listen(port, () => {
+    return console.log(`Running Example on localhost:${port}`);
 });
 
 module.exports = app;

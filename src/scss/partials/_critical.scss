@@ -43,6 +43,7 @@ header {
     backface-visibility: hidden;
     background-color: $theme-color-white;
     box-shadow: $box-shadow-bottom;
+
     @include breakpoint {
         height: 10em;
     }
@@ -59,10 +60,12 @@ header {
     transform: translateZ(0);
     backface-visibility: hidden;
     text-align: center;
+
     .logo-header-link {
         display: inline-block;
         margin-top: .75em;
     }
+
     .logo-header {
         display: block;
         height: 2em;
@@ -72,8 +75,8 @@ header {
 .main {
     background-color: $theme-color-white;
     margin-top: 2em;
+
     @include breakpoint {
         margin-top: 6.5em;
     }
 }
-

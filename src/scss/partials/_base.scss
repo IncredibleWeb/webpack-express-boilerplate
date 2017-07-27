@@ -31,19 +31,23 @@ $border-lighten: 1px solid rgba(0, 0, 0, .05);
 $overlay-background-color: rgba(0, 0, 0, .5);
 $max-width: 72em;
 $background-pattern-primary: url('/img/pattern.png');
+
 @mixin breakpoint($point: desktop) {
     @if $point == desktop-xxl {
         @media only screen and (min-width: 90em) {
             @content;
         }
-    } @else if $point == desktop-l {
+    }
+
+    @else if $point == desktop-l {
         @media only screen and (min-width: 78em) {
             @content;
         }
-    } @else {
+    }
+
+    @else {
         @media only screen and (min-width: 48em) {
             @content;
         }
     }
 }
-

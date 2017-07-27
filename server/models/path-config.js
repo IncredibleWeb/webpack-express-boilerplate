@@ -2,46 +2,45 @@ import fs from 'fs';
 import path from 'path';
 
 export default class {
-    constructor(folder) {
+    constructor(folder, pathConfigs) {
         this.folder = folder;
-    }
-
-    getDefaultPathConfig() {
-        return {
-            view: 'page',
-            inlineStyles: this.getFileContents(['/css/inline.css']),
-            remoteStyles: ['https://fonts.googleapis.com/css?family=Roboto:400,300,700,500,400italic', '/css/style.css'],
-            remoteScripts: ['/script.js']
+        this.pathConfigs = {
+            '/': {
+                view: 'index',
+                metaTitle: 'Webpack Example',
+                title: 'Webpack Example',
+                remoteScripts: ['/script.js']
+            },
+            '/success': {
+                view: 'empty',
+                metaTitle: 'Success',
+                title: 'Success',
+                remoteScripts: ['/script.js']
+            }
         };
     }
 
-    // retrieves the contents from a file on the file system
     getFileContents(files) {
         let self = this;
         // concat inline styles for document <head>
         let flattenedContents = '';
         files.forEach(function(file) {
-            flattenedContents += fs.readFileSync(path.resolve(__dirname) + self.folder + file);
+            flattenedContents += fs.readFileSync(path.resolve(__dirname) + self.folder + file); // eslint-disable-line no-undef
         });
 
         return flattenedContents;
     }
 
-    // retrieve the configuration for a given route
-    getConfigFromAPI(urlPath, params) {
-        let config = this.getDefaultPathConfig();
-        let mockedApiCallConfig = {
-            view: 'index',
-            data: {
-                header: 'This is my server side index page'
-            },
-            meta: {
-                title: 'My Index Page',
-                description: 'This is a typical server side rendered index page',
-                keywords: 'nodejs,express,webpack'
-            }
+    getConfig(urlPath) {
+        let object = this.pathConfigs[urlPath];
+
+        // check if the path is actually valid.
+        if (!object) {
+            return null;
+        }
+
+        return {
+            'data': object
         };
-        let pageConfig = Object.assign(config, mockedApiCallConfig);
-        return Promise.resolve(pageConfig);
-    };
+    }
 }

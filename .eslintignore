@@ -1,5 +1,5 @@
 dist/
-gulp/
-.esdoc.json
-webpack.config.js
+*.config.js
+*.config.js
 package.json
+app.babel.js
