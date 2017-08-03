@@ -1,7 +1,6 @@
 /* constants */
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = process.env.NODE_ENV !== 'production';
 const port = 3000;
-const isHttps = false;
 const outputFolder = 'dist';
 
 /* imports */
@@ -16,8 +15,8 @@ const StyleLintPlugin = require('stylelint-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 let node = {
-    name: "node",
-    devtool: isDev ? "inline-sourcemap" : "hidden-source-map",
+    name: 'node',
+    devtool: isDev ? 'inline-sourcemap' : 'hidden-source-map',
     target: 'node',
     node: {
         __dirname: true
@@ -43,7 +42,7 @@ let node = {
     ],
     module: {
         loaders: [{
-            enforce: "pre",
+            enforce: 'pre',
             test: /\.js$/,
             loader: 'eslint-loader',
             exclude: /node_modules/,
@@ -60,12 +59,13 @@ let node = {
 };
 
 let web = {
-    name: "web",
-    devtool: isDev ? "source-map" : "hidden-source-map",
+    name: 'web',
+    devtool: isDev ? 'source-map' : 'hidden-source-map',
     externals: [NodeExternals()],
-    entry: [
-        './src/js/main.js'
-    ],
+    entry: {
+        main: './src/js/main.js',
+        inline: './src/scss/inline.scss'
+    },
     output: {
         path: path.join(__dirname, outputFolder),
         filename: '[name].js'
@@ -91,7 +91,7 @@ let web = {
     ],
     module: {
         loaders: [{
-            enforce: "pre",
+            enforce: 'pre',
             test: /\.js$/,
             loader: 'eslint-loader',
             exclude: /node_modules/,
@@ -106,6 +106,9 @@ let web = {
             test: /\.(sass|scss)$/,
             exclude: /node_modules/,
             loader: ExtractTextPlugin.extract({ fallback: 'style-loader', use: ['css-loader', 'postcss-loader', 'sass-loader'] })
+        }, {
+            test: /\.(png|jpg|svg|ico|gif|json)$/,
+            loader: 'url-loader'
         }]
     }
 };
